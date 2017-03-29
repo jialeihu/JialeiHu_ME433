@@ -54,13 +54,14 @@ int main() {
 
     // do your TRIS and LAT commands here
 	TRISAbits.TRISA4 = 0;	  
-	TRISBbits.TRISB4 = 1;    
+	TRISBbits.TRISB4 = 1;  
+    LATAbits.LATA4 = 1;
     __builtin_enable_interrupts();
 
     while (1) {
  		_CP0_SET_COUNT(0);
-		while (_CP0_GET_COUNT()<98000) {;}
+		while (_CP0_GET_COUNT()<12000) {;}
 		LATAbits.LATA4 = !LATAbits.LATA4;
-        //LATAbits.LATA4 = 1;
+        
     }
 }
