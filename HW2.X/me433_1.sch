@@ -12501,7 +12501,7 @@ Source: www.kingbright.com</description>
 <instance part="P+1" gate="1" x="78.74" y="83.82"/>
 <instance part="P+2" gate="1" x="63.5" y="-2.54" rot="MR0"/>
 <instance part="+3V1" gate="G$1" x="-10.16" y="2.54"/>
-<instance part="+3V2" gate="G$1" x="76.2" y="68.58"/>
+<instance part="+3V2" gate="G$1" x="76.2" y="66.04"/>
 <instance part="+3V3" gate="G$1" x="88.9" y="50.8"/>
 <instance part="+3V4" gate="G$1" x="129.54" y="99.06"/>
 <instance part="+3V5" gate="G$1" x="101.6" y="27.94"/>
@@ -12671,7 +12671,7 @@ Source: www.kingbright.com</description>
 <wire x1="53.34" y1="60.96" x2="73.66" y2="60.96" width="0.1524" layer="91"/>
 <pinref part="+3V2" gate="G$1" pin="+3V3"/>
 <wire x1="73.66" y1="60.96" x2="76.2" y2="60.96" width="0.1524" layer="91"/>
-<wire x1="76.2" y1="60.96" x2="76.2" y2="66.04" width="0.1524" layer="91"/>
+<wire x1="76.2" y1="60.96" x2="76.2" y2="63.5" width="0.1524" layer="91"/>
 <pinref part="C3" gate="G$1" pin="1"/>
 <wire x1="73.66" y1="58.42" x2="73.66" y2="60.96" width="0.1524" layer="91"/>
 <junction x="73.66" y="60.96"/>
