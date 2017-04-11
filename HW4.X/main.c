@@ -1,6 +1,14 @@
 #include<xc.h>           // processor SFR definitions
 #include<sys/attribs.h>  // __ISR macro
 #include"spi.h"
+#include<math.h>
+
+static volatile unsigned char WaveSinform[100];
+static volatile unsigned char WaveDelform[200];
+
+
+void makeWaveform();
+
 
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
@@ -39,6 +47,7 @@
 
 #define CS LATBbits.LATB15  // chip select pin
 
+
 int main() {
 
     // do your TRIS and LAT commands here
@@ -46,11 +55,35 @@ int main() {
 	TRISBbits.TRISB4 = 1;     // RB4 as input
 	LATAbits.LATA4 = 1;      // RA4 is high
 	initSPI1();
-    
-    char channel = 0;
-    unsigned char voltage = 128;
+    makeWaveform();
+    int test1 = 0;
+    int test2 = 0;
     while(1){
-        setVoltage(channel, voltage);
+        _CP0_SET_COUNT(0);
+        while( _CP0_GET_COUNT() <= 12000){
+          ;
+        }
+        setVoltage(0, WaveSinform[test1]);
+        setVoltage(1, WaveDelform[test2]);
+        test1 = test1 + 1;
+        test2 = test2 + 1;
+        if(test1 == 100){
+            test1 = 0;
+        }
+        if(test2 == 200){
+            test2 = 0;
+        }
     }
 
+}
+
+void makeWaveform(){
+	int i = 0;
+	for(i = 0 ; i < 100;++i){
+       WaveSinform[i] = 255*sin((double)(i/100*2*3.14));
+	}
+	int j = 0;
+	for(j = 0 ; j < 200;++j){
+       WaveDelform[j] = 255*(double)(j/200);
+	}
 }
