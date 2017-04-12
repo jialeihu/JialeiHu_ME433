@@ -1,14 +1,7 @@
 #include<xc.h>           // processor SFR definitions
 #include<sys/attribs.h>  // __ISR macro
-#include"spi.h"
 #include<math.h>
-
-static volatile unsigned char WaveSinform[100];
-static volatile unsigned char WaveDelform[200];
-
-
-void makeWaveform();
-
+#include"spi.h"
 
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
@@ -46,44 +39,52 @@ void makeWaveform();
 #pragma config FVBUSONIO = ON // USB BUSON controlled by USB module
 
 #define CS LATBbits.LATB15  // chip select pin
+#define SINWAVELENGTH 100
+#define TRIWAVELENGTH 200
+#define PI 3.14
 
-
+void makewave(void);
+static volatile unsigned char sinwave[SINWAVELENGTH];
+static volatile unsigned char triwave[TRIWAVELENGTH];
 int main() {
-
+	makewave();
     // do your TRIS and LAT commands here
 	TRISAbits.TRISA4 = 0;	  // RA4 as output
 	TRISBbits.TRISB4 = 1;     // RB4 as input
 	LATAbits.LATA4 = 1;      // RA4 is high
 	initSPI1();
-    makeWaveform();
-    int test1 = 0;
-    int test2 = 0;
-    while(1){
-        _CP0_SET_COUNT(0);
-        while( _CP0_GET_COUNT() <= 12000){
-          ;
-        }
-        setVoltage(0, WaveSinform[test1]);
-        setVoltage(1, WaveDelform[test2]);
-        test1 = test1 + 1;
-        test2 = test2 + 1;
-        if(test1 == 100){
-            test1 = 0;
-        }
-        if(test2 == 200){
-            test2 = 0;
-        }
-    }
+	
+	char channel = 0;
+	int i_sin = 0;
+	int i_tri = 0;
+	while (1){
+		_CP0_SET_COUNT(0);
+		
+		while(_CP0_GET_COUNT()<24000){   // one stage
+			channel = 0;
+			write_dac(channel, sinwave[i_sin]);
+			channel = 1;
+			write_dac(channel, triwave[i_tri]);
+		}
+		i_sin++;
+		i_tri++;
+		if(i_sin == SINWAVELENGTH){
+			i_sin = 0;
+		}
+		if(i_tri == TRIWAVELENGTH){
+			i_tri = 0;
+		}
+	}
 
 }
 
-void makeWaveform(){
+void makewave(){
 	int i = 0;
-	for(i = 0 ; i < 100;++i){
-       WaveSinform[i] = 255*sin((double)(i/100*2*3.14));
+	for (i=0; i<SINWAVELENGTH; i++){
+		sinwave[i] = 127*sin((double)2*PI*i/(SINWAVELENGTH))+128;
 	}
-	int j = 0;
-	for(j = 0 ; j < 200;++j){
-       WaveDelform[j] = 255*(double)(j/200);
+
+	for (i=0; i<TRIWAVELENGTH; i++){
+		triwave[i] = 255*((double)i/TRIWAVELENGTH);
 	}
 }

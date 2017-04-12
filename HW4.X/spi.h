@@ -3,5 +3,6 @@
 
 void initSPI1(void);
 char SPI1_IO(char write);
-void setVoltage(char channel, unsigned char voltage);
+void write_dac(char channel,unsigned char voltage);
+
 #endif
