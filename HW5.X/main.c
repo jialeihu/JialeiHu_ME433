@@ -1,7 +1,7 @@
 #include<xc.h>           // processor SFR definitions
 #include<sys/attribs.h>  // __ISR macro
 #include<math.h>
-#include"spi.h"
+#include"i2c.h"
 
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
@@ -52,28 +52,17 @@ int main() {
 	TRISAbits.TRISA4 = 0;	  // RA4 as output
 	TRISBbits.TRISB4 = 1;     // RB4 as input
 	LATAbits.LATA4 = 1;      // RA4 is high
-	initSPI1();
-	
-	char channel = 0;
-	int i_sin = 0;
-	int i_tri = 0;
+	initExpander();
+
 	while (1){
-		_CP0_SET_COUNT(0);
+		if( getExpander()==1){
+			setExpander(0,0);
+		}
+		else{
+			setExpander(0,1);
+		}
 		
-		while(_CP0_GET_COUNT()<24000){   // one stage
-			channel = 0;
-			write_dac(channel, sinwave[i_sin]);
-			channel = 1;
-			write_dac(channel, triwave[i_tri]);
-		}
-		i_sin++;
-		i_tri++;
-		if(i_sin == SINWAVELENGTH){
-			i_sin = 0;
-		}
-		if(i_tri == TRIWAVELENGTH){
-			i_tri = 0;
-		}
+		
 	}
 
 }

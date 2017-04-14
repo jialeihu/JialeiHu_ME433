@@ -1,4 +1,4 @@
-
+#include<xc.h>
 #ifndef I2C_H__
 
 #define I2C_H__
@@ -25,6 +25,10 @@ void i2c_master_ack(int val);             // send an ACK (0) or NACK (1)
 
 void i2c_master_stop(void);               // send a stop
 
+void initExpander(void);
 
+void setExpander(char pin, char level);
+
+char getExpander();
 
 #endif

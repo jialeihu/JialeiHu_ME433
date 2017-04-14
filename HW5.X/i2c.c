@@ -1,12 +1,4 @@
-// I2C Master utilities, 100 kHz, using polling rather than interrupts
-
-// The functions must be callled in the correct order as per the I2C protocol
-
-// Change I2C1 to the I2C channel you are using
-
-// I2C pins need pull-up resistors, 2k-10k
-
-
+#include"i2c.h"
 
 void i2c_master_setup(void) {
 
@@ -92,10 +84,43 @@ void i2c_master_stop(void) {          // send a STOP:
 
 }
 
-void initI2C2(void){
-	i2c_master_setup();	
-	i2c_master_send(0x40);
-	i2c_master_send(0x00);
-	i2c_master_send(0xF0);
-	i2c_master_stop();
+void initExpander() {
+    ANSELBbits.ANSB2 = 0;
+    ANSELBbits.ANSB3 = 0;
+    i2c_master_setup();
+    i2c_master_start(); 
+    i2c_master_send(0x40); 
+    i2c_master_send(0x00); 
+    i2c_master_send(0b11110000); 
+    i2c_master_stop(); 
+
+}
+
+void setExpander(char pin, char level) {
+
+    i2c_master_start(); 
+    i2c_master_send(0x40); 
+    i2c_master_send(0x0A); 
+    if (level == 1)
+        i2c_master_send(0b1<<pin);
+    else if (level == 0)
+        i2c_master_send(0b0<<pin);
+    i2c_master_stop(); 
+
+}
+
+
+char getExpander() {   
+
+    i2c_master_start(); 
+    i2c_master_send(0x40); 
+    i2c_master_send(0x09); 
+    i2c_master_restart(); 
+    i2c_master_send(0x41); 
+	char temp;
+    temp = i2c_master_recv() >> 7 ; 
+    i2c_master_ack(1); 
+    i2c_master_stop(); 
+    return temp;
+
 }
