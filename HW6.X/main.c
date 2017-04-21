@@ -57,7 +57,7 @@ int main() {
 	LCD_init();
 	LCD_clearScreen(GREEN);
 	char str[STRINGLENTH];
-	sprintf(str, "Hello World%%d!");
+	sprintf(str, "Hello World!");
 	print_string(str,28,32,BLACK);
 	
 	while(1){
