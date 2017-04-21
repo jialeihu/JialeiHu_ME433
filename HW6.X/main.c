@@ -55,13 +55,13 @@ int main() {
 	
 	SPI1_init();
 	LCD_init();
-	LCD_clearScreen(0xffff);
+	LCD_clearScreen(GREEN);
 	char str[STRINGLENTH];
 	sprintf(str, "Hello World%%d!");
-	print_string(str,28,32,0x0000);
+	print_string(str,28,32,BLACK);
 	
 	while(1){
-		bar(10,50,0xf000,0xffff);
+		bar(10,50,RED,GREEN);
 	}
 	
 }
