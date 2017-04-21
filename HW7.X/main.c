@@ -1,7 +1,7 @@
 #include<xc.h>           // processor SFR definitions
 #include<sys/attribs.h>  // __ISR macro
-#include<stdio.h>
-#include"ILI9163C.h"
+#include<math.h>
+#include"i2c.h"
 
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
@@ -38,62 +38,42 @@
 #pragma config FUSBIDIO = ON // USB pins controlled by USB module
 #pragma config FVBUSONIO = ON // USB BUSON controlled by USB module
 
-#define STRINGLENTH 100
-#define BARWIDTH 10
-#define FREQUENCY 5
+#define CS LATBbits.LATB15  // chip select pin
+#define SINWAVELENGTH 100
+#define TRIWAVELENGTH 200
+#define PI 3.14
 
-
-void bar(unsigned short x, unsigned short y, unsigned short color, unsigned short back_color);
-
-
+void makewave(void);
+static volatile unsigned char sinwave[SINWAVELENGTH];
+static volatile unsigned char triwave[TRIWAVELENGTH];
 int main() {
+	makewave();
     // do your TRIS and LAT commands here
 	TRISAbits.TRISA4 = 0;	  // RA4 as output
 	TRISBbits.TRISB4 = 1;     // RB4 as input
 	LATAbits.LATA4 = 1;      // RA4 is high
-	
-	SPI1_init();
-	LCD_init();
-	LCD_clearScreen(GREEN);
-	char str[STRINGLENTH];
-	sprintf(str, "Hello World!");
-	print_string(str,28,32,BLACK);
-	
-	while(1){
-		bar(10,50,RED,GREEN);
-	}
-	
-}
+	initExpander();
 
-
-
-void bar(unsigned short x, unsigned short y, unsigned short color, unsigned short back_color){
-	unsigned short i,j;
-	long int count = 24000000/(FREQUENCY*100);
-	for (i=0; i<=100; i++){
-		for (j=0; j<=BARWIDTH; j++){
-			LCD_drawPixel(i+x,y+j,color);
+	while (1){
+		if( getExpander()==1){
+			setExpander(0,0);
 		}
-		char ch1[10],ch2[10];
-		sprintf(ch1,"%d",i);
-		print_string(ch1,x+45,y+5+BARWIDTH,color);
+		else{
+			setExpander(0,1);
+		}
 		
-		clearBar(x+47,x+90,y+BARWIDTH+25,y+BARWIDTH+41,back_color);
-		sprintf(ch2,"FPS:%.2f",(double)_CP0_GET_COUNT()/count);
-		print_string(ch2,x+25,y+25+BARWIDTH,color);
 		
-		_CP0_SET_COUNT(0);
-		while (_CP0_GET_COUNT()<count) {;}
-		clearBar(x+45,x+70,y+BARWIDTH+5,y+BARWIDTH+21,back_color);
 	}
-	clearBar(x,x+100,y,y+BARWIDTH,back_color);
+
 }
 
+void makewave(){
+	int i = 0;
+	for (i=0; i<SINWAVELENGTH; i++){
+		sinwave[i] = 127*sin((double)2*PI*i/(SINWAVELENGTH))+128;
+	}
 
-
-
-
-
-
-
-
+	for (i=0; i<TRIWAVELENGTH; i++){
+		triwave[i] = 255*((double)i/TRIWAVELENGTH);
+	}
+}
