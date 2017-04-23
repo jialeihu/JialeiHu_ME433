@@ -2,6 +2,7 @@
 #include<sys/attribs.h>  // __ISR macro
 #include<math.h>
 #include"i2c.h"
+#include "ILI9163C.h"
 
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
@@ -38,42 +39,62 @@
 #pragma config FUSBIDIO = ON // USB pins controlled by USB module
 #pragma config FVBUSONIO = ON // USB BUSON controlled by USB module
 
-#define CS LATBbits.LATB15  // chip select pin
-#define SINWAVELENGTH 100
-#define TRIWAVELENGTH 200
-#define PI 3.14
+#define BARWIDTH 5
+void PlotAccelerometer(short gx, short gy);
 
-void makewave(void);
-static volatile unsigned char sinwave[SINWAVELENGTH];
-static volatile unsigned char triwave[TRIWAVELENGTH];
+
 int main() {
-	makewave();
-    // do your TRIS and LAT commands here
-	TRISAbits.TRISA4 = 0;	  // RA4 as output
-	TRISBbits.TRISB4 = 1;     // RB4 as input
-	LATAbits.LATA4 = 1;      // RA4 is high
-	initExpander();
 
+
+    
+    SPI1_init();
+	LCD_init();
+	LCD_clearScreen(BLACK);
+    i2c2_init();
+    unsigned char datatemp[100];
+	short data[100];
+    int i = 0;
+    
+    
+    
 	while (1){
-		if( getExpander()==1){
-			setExpander(0,0);
+		_CP0_SET_COUNT(0);
+		while (_CP0_GET_COUNT()<4800000) {;}	
+        i2c_read_multiple(0b1101010, 0b00100000, datatemp, 14);
+        for(i=0; i<7; i++){
+			data[i] = datatemp[2*i+1]<<8 | datatemp[2*i];
 		}
-		else{
-			setExpander(0,1);
-		}
-		
-		
+		PlotAccelerometer(data[4],data[5]);
+        
 	}
 
 }
 
-void makewave(){
-	int i = 0;
-	for (i=0; i<SINWAVELENGTH; i++){
-		sinwave[i] = 127*sin((double)2*PI*i/(SINWAVELENGTH))+128;
-	}
 
-	for (i=0; i<TRIWAVELENGTH; i++){
-		triwave[i] = 255*((double)i/TRIWAVELENGTH);
+void PlotAccelerometer(short gx, short gy){
+	int x_length, y_length;
+	x_length = (int)((float)gx/16500*64);
+	y_length = (int)((float)gy/16500*64);
+	int abs_x_length = x_length, abs_y_length = y_length;
+	
+	if(x_length<0){
+		abs_x_length = -x_length;
+	}
+	if(y_length<0){
+		abs_y_length = -y_length;
+	}
+	int i,j;
+	clearBar(0,128,64-BARWIDTH,64+BARWIDTH,BLACK);
+	clearBar(64-BARWIDTH,64+BARWIDTH,0,128,BLACK);
+	for (i=0; i<abs_x_length; i++){
+		for(j=0; j<BARWIDTH; j++){
+			LCD_drawPixel((x_length/abs_x_length)*i+64,j+64-BARWIDTH/2,RED);
+		}
+	}
+	for (i=0; i<abs_y_length; i++){
+		for(j=0; j<BARWIDTH; j++){
+			LCD_drawPixel(j+64-BARWIDTH/2,(y_length/abs_y_length)*i+64,BLUE);
+		}
 	}
 }
+
