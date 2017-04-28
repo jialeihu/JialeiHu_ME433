@@ -3,7 +3,7 @@
 #include<math.h>
 #include"spi.h"
 
-// DEVCFG0wwwwwwgg
+// DEVCFG0
 #pragma config DEBUG = OFF // no debugging
 #pragma config JTAGEN = OFF // no jtag
 #pragma config ICESEL = ICS_PGx1 // use PGED1 and PGEC1

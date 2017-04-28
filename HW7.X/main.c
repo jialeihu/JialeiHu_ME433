@@ -66,6 +66,7 @@ int main() {
 		}
 		PlotAccelerometer(data[4],data[5]);
         
+        
 	}
 
 }
