@@ -223,6 +223,6 @@ build/default/production/_ext/1688732426/system_interrupt.o:  \
  ../../../../../../../installations/Microchip/harmony/v1_10/framework/osal/src/osal_impl_basic.h  \
  ../../../../../../../installations/Microchip/harmony/v1_10/framework/usb/usb_device_cdc.h  \
  ../../../../../../../installations/Microchip/harmony/v1_10/framework/usb/usb_cdc.h  \
- ../src/imu.h  \
-../src/i2c.h  \
+ ../src/i2c.h  \
+../src/ILI9163C.h  \
  ../src/system_config/default/system_definitions.h 

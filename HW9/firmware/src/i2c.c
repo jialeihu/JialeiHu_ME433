@@ -48,3 +48,53 @@ void i2c_master_stop(void) {          // send a STOP:
     I2C2CONbits.PEN = 1;                // comm is complete and master relinquishes bus
     while(I2C2CONbits.PEN) { ; }        // wait for STOP to complete
 }
+
+void i2c_read_multiple(unsigned char address, unsigned char regis, unsigned char * data, int length){
+    unsigned char * temp;
+    int j;
+    temp = data;
+    i2c_master_start(); // make the start bit
+    i2c_master_send(address << 1 | 0b0); // write the address, shifted left by 1, or'ed with a 0 to indicate writing
+    i2c_master_send(regis); // the register to read from
+    i2c_master_restart(); // make the restart bit
+    i2c_master_send(address << 1 | 0b1); // write the address, shifted left by 1, or'ed with a 1 to indicate reading  
+    for (j = 0; j < (length - 1); j++) {
+        * (temp + j) = i2c_master_recv();
+        i2c_master_ack(0);
+    }
+    * (temp + j)= i2c_master_recv();
+    i2c_master_ack(1); // make the ack so the slave knows we got it
+    i2c_master_stop(); // make the stop bit
+}
+
+void i2c2_init(void){
+	ANSELBbits.ANSB2 = 0;    // turn off analog
+	ANSELBbits.ANSB3 = 0;
+	i2c_master_setup();
+	i2c_master_start();
+	/*i2c_master_send(0xd4);  // (SAD+) write mode
+	i2c_master_send(0x0f);  // want to read WHOAMI address
+	i2c_master_restart();
+	i2c_master_send(0xd5);  // (SAD+) read mode
+	char who_am_i = i2c_master_recv(); // receive
+	i2c_master_ack(1);
+	i2c_master_stop();
+		
+	char message[100];
+	sprintf(message,"0x%0x",who_am_i);
+	print_string(message,48,32,BLACK);   // should be 0x69 or 0b01101001*/	
+
+	
+    i2c_master_send(0b11010100); //for write
+    i2c_master_send(0b00010000); //CTRL1_XL
+    i2c_master_send(0b10000010);// 
+    i2c_master_restart();
+    i2c_master_send(0b11010100); //for write
+    i2c_master_send(0b00010001); //CTRL2_G
+    i2c_master_send(0b10001000);// 
+    i2c_master_restart();
+    i2c_master_send(0b11010100); //for write
+    i2c_master_send(0b00010010); //CTRL3_C
+    i2c_master_send(0b00000100);//  
+    i2c_master_stop();
+}

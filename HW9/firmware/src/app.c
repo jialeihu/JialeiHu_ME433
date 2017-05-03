@@ -6,8 +6,10 @@
   
   File Name:
     app.c
+
   Summary:
     This file contains the source code for the MPLAB Harmony application.
+
   Description:
     This file contains the source code for the MPLAB Harmony application.  It 
     implements the logic of the application's state machine and it may call 
@@ -22,12 +24,15 @@
 // DOM-IGNORE-BEGIN
 /*******************************************************************************
 Copyright (c) 2013-2014 released Microchip Technology Inc.  All rights reserved.
+
 Microchip licenses to you the right to use, modify, copy and distribute
 Software only when embedded on a Microchip microcontroller or digital signal
 controller that is integrated into your product or third party product
 (pursuant to the sublicense terms in the accompanying license agreement).
+
 You should refer to the license agreement accompanying this Software for
 additional information regarding your rights and obligations.
+
 SOFTWARE AND DOCUMENTATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
 EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF
 MERCHANTABILITY, TITLE, NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -62,15 +67,19 @@ uint8_t APP_MAKE_BUFFER_DMA_READY dataOut[APP_READ_BUFFER_SIZE];
 uint8_t APP_MAKE_BUFFER_DMA_READY readBuffer[APP_READ_BUFFER_SIZE];
 int len, i = 0;
 int startTime = 0;
-unsigned char data_imu[100];
-short data_combine[100];
+unsigned char datatemp[100];
+short data[100];
+
 
 // *****************************************************************************
 /* Application Data
+
   Summary:
     Holds application data
+
   Description:
     This structure holds the application's data.
+
   Remarks:
     This structure should be initialized by the APP_Initialize function.
     
@@ -294,6 +303,7 @@ bool APP_StateReset(void) {
 /*******************************************************************************
   Function:
     void APP_Initialize ( void )
+
   Remarks:
     See prototype in app.h.
  */
@@ -332,18 +342,15 @@ void APP_Initialize(void) {
 
     /* Set up the read buffer */
     appData.readBuffer = &readBuffer[0];
-	
-	IMU_init();
-	TRISAbits.TRISA4 = 0;	  // RA4 as output
-	TRISBbits.TRISB4 = 1;     // RB4 as input
-	LATAbits.LATA4 = 1;      // RA4 is high
 
+    i2c2_init();
     startTime = _CP0_GET_COUNT();
 }
 
 /******************************************************************************
   Function:
     void APP_Tasks ( void )
+
   Remarks:
     See prototype in app.h.
  */
@@ -396,18 +403,19 @@ void APP_Tasks(void) {
                 USB_DEVICE_CDC_Read(USB_DEVICE_CDC_INDEX_0,
                         &appData.readTransferHandle, appData.readBuffer,
                         APP_READ_BUFFER_SIZE);
-				
+
                 if (appData.readTransferHandle == USB_DEVICE_CDC_TRANSFER_HANDLE_INVALID) {
                     appData.state = APP_STATE_ERROR;
                     break;
                 }
-            }
-			if(appData.readBuffer[0]=='r'){
+               
+            }    
+            if(appData.readBuffer[0]=='r'){
 				appData.state = APP_STATE_WAIT_FOR_READ_COMPLETE;
-			}
-			
+            }
+           break;
 
-            break;
+            
 
         case APP_STATE_WAIT_FOR_READ_COMPLETE:
         case APP_STATE_CHECK_TIMER:
@@ -415,11 +423,11 @@ void APP_Tasks(void) {
             if (APP_StateReset()) {
                 break;
             }
-			
+
             /* Check if a character was received or a switch was pressed.
              * The isReadComplete flag gets updated in the CDC event handler. */
 
-            if (appData.isReadComplete || _CP0_GET_COUNT() - startTime > (2400000 / 2 / 5)) {
+            if (appData.isReadComplete || _CP0_GET_COUNT() - startTime > 240000) {
                 appData.state = APP_STATE_SCHEDULE_WRITE;
             }
 
@@ -436,22 +444,16 @@ void APP_Tasks(void) {
 
             appData.writeTransferHandle = USB_DEVICE_CDC_TRANSFER_HANDLE_INVALID;
             appData.isWriteComplete = false;
-
             appData.state = APP_STATE_WAIT_FOR_WRITE_COMPLETE;
-			
-			IMU_read(0x6a, 0x22, data_imu, 12);
-			int j = 0;
-			for(j=0; j<6; j++){
-				data_combine[j] = data_imu[2*j+1]<<8 | data_imu[2*j];
-			}			
-            len = sprintf(dataOut, "%3d  %8.2f  %8.2f  %8.2f  %8.3f  %8.3f  %8.3f\r\n", i, (float)(data_combine[0]/10), (float)(data_combine[1]/10),
-                (float)(data_combine[2]/10),(float)(data_combine[3]*9.8/16200),(float)(data_combine[4]*9.8/16200),(float)(data_combine[5]*9.8/16200));
-			
-			if(i == 100){
-				appData.readBuffer[0] = 'a';
-				i = 0;
-			}
-			i++;
+            
+            i2c_read_multiple(0b1101010, 0b00100000, datatemp, 14);
+            int j = 0;
+            for(j=0; j<7; j++){
+		    data[j] = datatemp[2*j+1]<<8 | datatemp[2*j];
+            }
+            len = sprintf(dataOut, "%3d  %8.2f  %8.2f  %8.2f  %8.3f  %8.3f  %8.3f\r\n", i, (float)(data[1]/10), (float)(data[2]/10),(float)(data[3]/10),(float)(data[4]*9.8/16200),(float)(data[5]*9.8/16200),(float)(data[6]*9.8/16200));
+
+            i++;
             if (appData.isReadComplete) {
                 USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
                         &appData.writeTransferHandle,

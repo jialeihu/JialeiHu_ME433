@@ -20,7 +20,6 @@
         </logicalFolder>
         <itemPath>../src/app.h</itemPath>
         <itemPath>../src/i2c.h</itemPath>
-        <itemPath>../src/imu.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="framework" projectFiles="true">
         <logicalFolder name="f5" displayName="driver" projectFiles="true">
@@ -133,10 +132,9 @@
             <itemPath>../src/system_config/default/system_tasks.c</itemPath>
           </logicalFolder>
         </logicalFolder>
-        <itemPath>../src/main.c</itemPath>
         <itemPath>../src/app.c</itemPath>
         <itemPath>../src/i2c.c</itemPath>
-        <itemPath>../src/imu.c</itemPath>
+        <itemPath>../src/main.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="framework" projectFiles="true">
         <logicalFolder name="f2" displayName="driver" projectFiles="true">
@@ -198,7 +196,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC32</languageToolchain>
-        <languageToolchainVersion>1.40</languageToolchainVersion>
+        <languageToolchainVersion>1.42</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <compileType>

@@ -223,5 +223,5 @@ build/default/production/_ext/639803181/sys_clk_static.o:  \
  ../../../../../../../installations/Microchip/harmony/v1_10/framework/usb/usb_device_cdc.h  \
  ../../../../../../../installations/Microchip/harmony/v1_10/framework/usb/usb_cdc.h  \
  ../src/app.h  \
-../src/imu.h  \
-../src/i2c.h 
+../src/i2c.h  \
+../src/ILI9163C.h 
