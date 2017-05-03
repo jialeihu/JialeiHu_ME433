@@ -65,7 +65,8 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 uint8_t APP_MAKE_BUFFER_DMA_READY dataOut[APP_READ_BUFFER_SIZE];
 uint8_t APP_MAKE_BUFFER_DMA_READY readBuffer[APP_READ_BUFFER_SIZE];
-int len, i = 0;
+int len = 0;
+int i = 1;
 int startTime = 0;
 unsigned char datatemp[100];
 short data[100];
@@ -451,9 +452,14 @@ void APP_Tasks(void) {
             for(j=0; j<7; j++){
 		    data[j] = datatemp[2*j+1]<<8 | datatemp[2*j];
             }
-            len = sprintf(dataOut, "%3d  %8.2f  %8.2f  %8.2f  %8.3f  %8.3f  %8.3f\r\n", i, (float)(data[1]/10), (float)(data[2]/10),(float)(data[3]/10),(float)(data[4]*9.8/16200),(float)(data[5]*9.8/16200),(float)(data[6]*9.8/16200));
+            len = sprintf(dataOut, "%3d  %8.3f  %8.3f  %8.3f  %8.2f  %8.2f  %8.2f\r\n", i, (float)(data[4]*9.8/16200), (float)(data[5]*9.8/16200),(float)(data[6]*9.8/16200),(float)(data[1]*0.03),(float)(data[2]*0.03),(float)(data[3]*0.03));
 
             i++;
+            
+            if(i == 101){
+				appData.readBuffer[0] = 'h';
+				i = 1;
+			}
             if (appData.isReadComplete) {
                 USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
                         &appData.writeTransferHandle,
