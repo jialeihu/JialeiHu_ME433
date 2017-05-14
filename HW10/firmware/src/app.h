@@ -67,6 +67,8 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 extern "C" {
 
 #endif
+
+
 // DOM-IGNORE-END 
 
 // *****************************************************************************
@@ -85,7 +87,7 @@ extern "C" {
     This enumeration defines the valid application states.  These states
     determine the behavior of the application at various times.
 */
-
+#define NSAMPLE 500 
 typedef enum
 {
 	/* Application's state machine's initial state. */

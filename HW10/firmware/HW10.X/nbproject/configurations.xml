@@ -133,6 +133,7 @@
             <itemPath>../src/system_config/default/system_tasks.c</itemPath>
           </logicalFolder>
         </logicalFolder>
+        <itemPath>../src/main.c</itemPath>
         <itemPath>../src/ILI9163C.c</itemPath>
         <itemPath>../src/app.c</itemPath>
         <itemPath>../src/i2c.c</itemPath>
@@ -197,7 +198,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC32</languageToolchain>
-        <languageToolchainVersion>1.40</languageToolchainVersion>
+        <languageToolchainVersion>1.42</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <compileType>

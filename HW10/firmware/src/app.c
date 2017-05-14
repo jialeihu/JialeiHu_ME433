@@ -70,7 +70,9 @@ int i = 1;
 int startTime = 0;
 unsigned char datatemp[100];
 short data[100];
-
+float data_maf[NSAMPLE+10];
+float data_fir[NSAMPLE+10];
+float iir_pre = 0;
 
 // *****************************************************************************
 /* Application Data
@@ -447,30 +449,112 @@ void APP_Tasks(void) {
             appData.isWriteComplete = false;
             appData.state = APP_STATE_WAIT_FOR_WRITE_COMPLETE;
             
+            if (i == 0){
+                len = sprintf(dataOut,"%d\r\n",NSAMPLE);
+                  USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
+                        &appData.writeTransferHandle,
+                        dataOut,len, USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
+            }
+
             i2c_read_multiple(0b1101010, 0b00100000, datatemp, 14);
             int j = 0;
             for(j=0; j<7; j++){
-		    data[j] = datatemp[2*j+1]<<8 | datatemp[2*j];
+                data[j] = datatemp[2*j+1]<<8 | datatemp[2*j];
             }
-            len = sprintf(dataOut, "%3d  %8.3f  %8.3f  %8.3f  %8.2f  %8.2f  %8.2f\r\n", i, (float)(data[4]*9.8/16200), (float)(data[5]*9.8/16200),(float)(data[6]*9.8/16200),(float)(data[1]*0.03),(float)(data[2]*0.03),(float)(data[3]*0.03));
-
-            i++;
+            float Z_A = (float)(data[6]*9.8/16200);
             
-            if(i == 101){
-				appData.readBuffer[0] = 'h';
-				i = 1;
+//MAF:    
+
+			if (i<4){
+				switch (i){
+					case 0:
+						data_maf[i] = Z_A;
+						break;
+
+					case 1:
+						data_maf[i] = (data_maf[i-1]+Z_A)/2;
+						break;
+
+					case 2:
+						data_maf[i] = (data_maf[i-2]+data_maf[i-1]+Z_A)/3;
+
+						break;
+
+					case 3:
+						data_maf[i] = (data_maf[i-3]+data_maf[i-2]+data_maf[i-1]+Z_A)/4;
+
+						break;
+
+					default:
+						break;
+
+				}
+				//data_buffer_maf[i] = z_acc;
+			}else if (i<=NSAMPLE){
+				data_maf[i] = (data_maf[i-4]+data_maf[i-3]+data_maf[i-2]+data_maf[i-1]+Z_A)/5;
 			}
-            if (appData.isReadComplete) {
-                USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                        &appData.writeTransferHandle,
-                        appData.readBuffer, 1,
-                        USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
-            } else {
-                USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                        &appData.writeTransferHandle, dataOut, len,
-                        USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
-                startTime = _CP0_GET_COUNT();
-            }
+			float data_MAF = data_maf[i];
+
+//IIR:
+
+			float iir_cur = 0;
+			if (i == 0){
+				iir_cur = Z_A;
+				iir_pre = Z_A;
+			}else if (i<=NSAMPLE){
+
+				iir_cur = 0.7*iir_pre + 0.3*Z_A;
+
+				iir_pre = iir_cur;
+
+			}
+
+//FIR:
+
+			if(i<3){
+				switch(i){
+					case 0:
+						data_fir[i] = Z_A;
+						
+                        break;
+
+					case 1:
+						data_fir[i] = 0.7*data_fir[i-1]+0.3*Z_A;
+
+						break;
+
+					case 2:
+
+						data_fir[i] = 0.3*data_fir[i-2]+0.4*data_fir[i-1]+0.3*Z_A;
+
+						break;
+
+					default:
+
+						break;
+
+				}
+
+			}else if(i<=NSAMPLE){
+
+				data_fir[i] = 0.1*data_fir[i-3]+0.2*data_fir[i-2]+0.4*data_fir[i-1]+0.3*Z_A;
+
+			}
+
+			float data_FIR = data_fir[i];
+
+			if(i == NSAMPLE){
+				appData.readBuffer[0] = 'a';
+				i = -1;
+			}
+
+			i++;
+
+			len = sprintf(dataOut, "%f   %f   %f   %f\r\n", Z_A, data_MAF, iir_cur, data_FIR);
+
+			USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
+					&appData.writeTransferHandle, dataOut, len,
+					USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
             break;
 
         case APP_STATE_WAIT_FOR_WRITE_COMPLETE:
