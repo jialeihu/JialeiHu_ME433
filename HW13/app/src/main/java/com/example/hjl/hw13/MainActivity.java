@@ -49,7 +49,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 progressChanged = progress;
-                x = progress * 3 + 450;
+                x = progress;
             }
 
             @Override
@@ -124,55 +124,41 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
     // the important function
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-        // Invoked every time there's a new Camera preview frame
+        // every time there is a new Camera preview frame
         mTextureView.getBitmap(bmp);
+
         final Canvas c = mSurfaceHolder.lockCanvas();
         if (c != null) {
-            int[] pixels = new int[bmp.getWidth()];
-            int startY = 15; // which row in the bitmap to analyse to read
-            // only look at one row in the image
-            bmp.getPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1); // (array name, offset inside array, stride (size of row), start x, start y, num pixels to read per row, num rows to read)
-            // pixels[] is the RGBA data (in black an white).
-            // instead of doing center of mass on it, decide if each pixel is dark enough to consider black or white
-            // then do a center of mass on the thresholded array
-            int[] thresholdedPixels = new int[bmp.getWidth()];
-            int wbTotal = 0; // total mass
-            int wbCOM = 0; // total (mass time position)
-            for (int i = 0; i < bmp.getWidth(); i++) {
-                // sum the red, green and blue, subtract from 255 to get the darkness of the pixel.
-                // if it is greater than some value (600 here), consider it black
-                // play with the 600 value if you are having issues reliably seeing the line
-                if (255*3-(red(pixels[i])+green(pixels[i])+blue(pixels[i])) > x) {
-                    thresholdedPixels[i] = 255*3;
-                }
-                else {
-                    thresholdedPixels[i] = 0;
-                }
-                wbTotal = wbTotal + thresholdedPixels[i];
-                wbCOM = wbCOM + thresholdedPixels[i]*i;
-            }
-            int COM;
-            //watch out for divide by 0
-            if (wbTotal<=0) {
-                COM = bmp.getWidth()/2;
-            }
-            else {
-                COM = wbCOM/wbTotal;
-            }
-            // draw a circle where you think the COM is
-            canvas.drawCircle(COM, startY, 5, paint1);
-            // also write the value as text
-            canvas.drawText("COM = " + COM, 10, 200, paint1);
-            canvas.drawText("R = " + COM, 10, 200, paint1);
-            c.drawBitmap(bmp, 0, 0, null);
-            mSurfaceHolder.unlockCanvasAndPost(c);
+            int thresh = x; // comparison value
+            int widthgap = 8;
+            int height = bmp.getHeight()/widthgap;
+            int[][] pixels = new int[height][bmp.getWidth()]; // pixels[] is the RGBA data
 
-            // calculate the FPS to see how fast the code is running
 
-            long nowtime = System.currentTimeMillis();
-            long diff = nowtime - prevtime;
-            mTextView.setText("FPS " + 1000/diff);
-            prevtime = nowtime;
+            for (int j = 0; j<height; j++) {    // j is the index of the row of array
+                int y = j*widthgap;                // every 5 pixel each row
+                bmp.getPixels(pixels[j], 0, bmp.getWidth(), 0, y, bmp.getWidth(), 1);
+                for (int i = 0; i < bmp.getWidth(); i++) {
+                    if ((green(pixels[j][i])*3-(green(pixels[j][i])+red(pixels[j][i])+blue(pixels[j][i]))) > thresh) {
+                        pixels[j][i] = rgb(0, 255, 0); // over write the pixel with pure green
+                    }
+                }
+                bmp.setPixels(pixels[j], 0, bmp.getWidth(), 0, y, bmp.getWidth(), 1);
+            }
         }
+        // draw a circle at some position
+        int pos = 50;
+        canvas.drawCircle(pos, 240, 5, paint1); // x position, y position, diameter, color
+
+        // write the pos as text
+        canvas.drawText("Thresh = " + x, 10, 200, paint1);
+        c.drawBitmap(bmp, 0, 0, null);
+        mSurfaceHolder.unlockCanvasAndPost(c);
+
+        // calculate the FPS to see how fast the code is running
+        long nowtime = System.currentTimeMillis();
+        long diff = nowtime - prevtime;
+        mTextView.setText("FPS " + 1000 / diff);
+        prevtime = nowtime;
     }
 }
