@@ -54,7 +54,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 
 #include "app.h"
-#include <stdio.h>
+//#include <stdio.h>
 #include <xc.h>
 
 // *****************************************************************************
