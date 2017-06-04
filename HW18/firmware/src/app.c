@@ -6,10 +6,8 @@
   
   File Name:
     app.c
-
   Summary:
     This file contains the source code for the MPLAB Harmony application.
-
   Description:
     This file contains the source code for the MPLAB Harmony application.  It 
     implements the logic of the application's state machine and it may call 
@@ -24,15 +22,12 @@
 // DOM-IGNORE-BEGIN
 /*******************************************************************************
 Copyright (c) 2013-2014 released Microchip Technology Inc.  All rights reserved.
-
 Microchip licenses to you the right to use, modify, copy and distribute
 Software only when embedded on a Microchip microcontroller or digital signal
 controller that is integrated into your product or third party product
 (pursuant to the sublicense terms in the accompanying license agreement).
-
 You should refer to the license agreement accompanying this Software for
 additional information regarding your rights and obligations.
-
 SOFTWARE AND DOCUMENTATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
 EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF
 MERCHANTABILITY, TITLE, NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -68,19 +63,16 @@ uint8_t APP_MAKE_BUFFER_DMA_READY readBuffer[APP_READ_BUFFER_SIZE];
 int len, i = 0;
 int startTime = 0;
 int j = 0;
-int datatemp = 0;
+int datatemp;
 char rx[100];
-
+int check = 0;
 
 // *****************************************************************************
 /* Application Data
-
   Summary:
     Holds application data
-
   Description:
     This structure holds the application's data.
-
   Remarks:
     This structure should be initialized by the APP_Initialize function.
     
@@ -304,7 +296,6 @@ bool APP_StateReset(void) {
 /*******************************************************************************
   Function:
     void APP_Initialize ( void )
-
   Remarks:
     See prototype in app.h.
  */
@@ -343,7 +334,8 @@ void APP_Initialize(void) {
 
     /* Set up the read buffer */
     appData.readBuffer = &readBuffer[0];
-
+	
+	// put these initializations in APP_Initialize()
     RPA0Rbits.RPA0R = 0b0101; // A0 is OC1
     TRISAbits.TRISA1 = 0;
     LATAbits.LATA1 = 0; // A1 is the direction pin to go along with OC1
@@ -351,7 +343,8 @@ void APP_Initialize(void) {
     RPB2Rbits.RPB2R = 0b0101; // B2 is OC4
     TRISBbits.TRISB3 = 0;
     LATBbits.LATB3 = 0; // B3 is the direction pin to go along with OC4
-    
+	
+	// also put these in APP_Initialize()
     T2CONbits.TCKPS = 2; // prescaler N=4 
     PR2 = 1200 - 1; // 10kHz
     TMR2 = 0;
@@ -364,14 +357,13 @@ void APP_Initialize(void) {
     T2CONbits.ON = 1;
     OC1CONbits.ON = 1;
     OC4CONbits.ON = 1;
-    
+
     startTime = _CP0_GET_COUNT();
 }
 
 /******************************************************************************
   Function:
     void APP_Tasks ( void )
-
   Remarks:
     See prototype in app.h.
  */
@@ -443,16 +435,15 @@ void APP_Tasks(void) {
             /* Check if a character was received or a switch was pressed.
              * The isReadComplete flag gets updated in the CDC event handler. */
 
-            if (appData.isReadComplete){
+            if (appData.isReadComplete) {
                 appData.state = APP_STATE_SCHEDULE_WRITE;
             }
 
             break;
 
 
-        case APP_STATE_SCHEDULE_WRITE:
-
-             if (APP_StateReset()) {
+        case APP_STATE_SCHEDULE_WRITE: 
+            if (APP_StateReset()) {
                 break;
             }
 
@@ -467,23 +458,46 @@ void APP_Tasks(void) {
             if (appData.isReadComplete) {
 
 				if(appData.readBuffer[0] == '\r' || appData.readBuffer[0] == '\n'){
-					char rxtemp[j-1];
-					static int jtemp = 0;
-					for(jtemp = 0; jtemp < j; j++){
-						rxtemp[jtemp] = rx[jtemp];
-					}
-					sscanf(rxtemp, "%d", &datatemp);
-					len = sprintf(dataOut, "\r\ndata = %d\r\n", datatemp);
-					USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                        &appData.writeTransferHandle, dataOut, len,
-                        USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
-					if (datatemp < 0){
-						LATAbits.LATA1 = 0; // direction
-						OC1RS = -datatemp; // velocity, 50%
-					} else {
-						LATAbits.LATA1 = 1; // direction
-						OC1RS = datatemp; // velocity, 50%
-					}
+                    if(check == 0){    
+                        char rxtemp[j-1];
+                        static int jtemp = 0;
+                        for(jtemp = 0; jtemp < j; jtemp++){
+                            rxtemp[jtemp] = rx[jtemp];
+                        }
+                        sscanf(rxtemp, "%d", &datatemp);
+                        len = sprintf(dataOut, "\r\nPWM1 = %d\r\n", datatemp);
+                        USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
+                            &appData.writeTransferHandle, dataOut, len,
+                            USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
+                        if (datatemp < 0){
+                            LATAbits.LATA1 = 0; // direction
+                            OC1RS = -datatemp; // velocity, 50%
+                        } else {
+                            LATAbits.LATA1 = 1; // direction
+                            OC1RS = datatemp; // velocity, 50%
+                        }
+                        check = check + 1;
+                    }
+                    else if(check == 1){
+                        char rxtemp[j-1];
+                        static int jtemp = 0;
+                        for(jtemp = 0; jtemp < j; jtemp++){
+                            rxtemp[jtemp] = rx[jtemp];
+                        }
+                        sscanf(rxtemp, "%d", &datatemp);
+                        len = sprintf(dataOut, "\r\nPWM2 = %d\r\n", datatemp);
+                        USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
+                            &appData.writeTransferHandle, dataOut, len,
+                            USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
+                        if (datatemp < 0){
+							LATBbits.LATB3 = 0; // direction
+							OC4RS = -datatemp; // velocity, 50%
+                        } else {
+							LATBbits.LATB3 = 1; // direction
+							OC4RS = datatemp; // velocity, 50%
+                        }
+                        check = 0;                        
+                    }
 				}
 				rx[j] = appData.readBuffer[0];
 				j++;
